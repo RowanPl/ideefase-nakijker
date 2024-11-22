@@ -1,0 +1,298 @@
+/* Base styles */
+.form-section {
+    @apply mb-6;
+}
+
+.form-label {
+    @apply block mb-2 font-semibold text-gray-700;
+}
+
+.form-input {
+    @apply w-full p-3 border border-gray-300 rounded-lg
+    focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent
+    transition-all duration-200 bg-white;
+}
+
+.form-textarea {
+    @apply w-full min-w-[500px] p-3 border border-gray-300 rounded-lg
+    focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent
+    transition-all duration-200 resize-vertical min-h-[120px] bg-white;
+    width: 100%;
+}
+
+/* Radio group styling */
+.radio-group {
+    @apply flex flex-wrap gap-4;
+}
+
+.radio-label {
+    @apply inline-flex items-center cursor-pointer
+    bg-white px-4 py-2 rounded-lg border border-gray-300
+    transition-all duration-200 hover:bg-gray-50;
+}
+
+.radio-label input[type="radio"] {
+    @apply mr-2;
+}
+
+.radio-label input[type="radio"]:checked + span {
+    @apply text-blue-600 font-semibold;
+}
+
+/* Button styles */
+.btn {
+    @apply px-6 py-2 rounded-lg font-semibold transition-all duration-200
+    focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+    @apply bg-blue-500 text-white hover:bg-blue-600
+    focus:ring-blue-400;
+}
+
+.btn-danger {
+    @apply bg-red-500 text-white hover:bg-red-600
+    focus:ring-red-400;
+}
+
+/* Result textarea specific styling */
+.result-textarea {
+    @apply bg-gray-50 cursor-default;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .form-section {
+        @apply mb-4;
+    }
+
+    .radio-group {
+        @apply flex-col;
+    }
+
+    .radio-label {
+        @apply w-full justify-center;
+    }
+
+    .btn {
+        @apply w-full mb-2;
+    }
+
+    .flex.justify-between {
+        @apply flex-col;
+    }
+
+    .space-x-4 {
+        @apply space-x-0 space-y-2;
+    }
+
+    /* Base styles and animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(-20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* Progress Bar */
+    .progress-bar {
+        @apply flex justify-between items-center mb-8 relative;
+    }
+
+    .progress-bar::before {
+        content: '';
+        @apply absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -z-10 transform -translate-y-1/2;
+    }
+
+    .progress-step {
+        @apply flex flex-col items-center relative bg-white rounded-full p-3 transition-all duration-300;
+    }
+
+    .progress-step i {
+        @apply text-gray-400 text-xl mb-1 transition-colors duration-300;
+    }
+
+    .progress-step span {
+        @apply text-sm text-gray-500 absolute -bottom-6 whitespace-nowrap;
+    }
+
+    .progress-step.active i {
+        @apply text-blue-500;
+    }
+
+    .progress-step.complete i {
+        @apply text-green-500;
+    }
+
+    /* Form Sections */
+    .form-section {
+        @apply bg-white rounded-xl p-6 mb-6 animate-[fadeIn_0.3s_ease-out];
+    }
+
+    .section-header {
+        @apply border-b border-gray-200 pb-4 mb-6;
+    }
+
+    /* Variant Selector */
+    .variant-selector {
+        @apply mb-8;
+    }
+
+    .variant-option {
+        @apply relative inline-flex cursor-pointer mr-4;
+    }
+
+    .variant-option input {
+        @apply absolute opacity-0;
+    }
+
+    .variant-content {
+        @apply flex items-center gap-2 px-6 py-3 rounded-lg border-2 border-gray-200
+        transition-all duration-200 hover:border-blue-400;
+    }
+
+    .variant-option input:checked + .variant-content {
+        @apply border-blue-500 bg-blue-50;
+    }
+
+    .variant-option i {
+        @apply text-gray-500 transition-colors duration-200;
+    }
+
+    .variant-option input:checked + .variant-content i {
+        @apply text-blue-500;
+    }
+
+    /* Form Elements */
+    .form-label {
+        @apply block mb-2 font-semibold text-gray-700 flex items-center gap-2;
+    }
+
+    .input-group {
+        @apply border-2 rounded-lg relative p-1;
+
+    }
+
+
+    .form-input {
+        @apply w-full px-4 py-3 border border-gray-300 rounded-lg
+        focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent
+        transition-all duration-200 bg-white;
+    }
+
+    .textarea-container {
+        @apply relative w-full;
+    }
+
+    .textarea-counter {
+        @apply absolute -bottom-6 right-2 text-sm text-gray-500;
+    }
+
+    .form-textarea {
+        @apply w-full px-4 py-3 border border-gray-300 rounded-lg
+        focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent
+        transition-all duration-200 resize-none bg-white;
+    }
+
+    textarea {
+        width: 100%;
+    }
+
+    /* Result Section */
+    .result-container {
+        @apply relative bg-gray-50 rounded-lg p-4 mt-8;
+    }
+
+    .result-textarea {
+        @apply w-full min-h-[200px] bg-gray-50 font-mono text-sm cursor-default resize-vertical;
+    }
+
+    .char-counter {
+        @apply text-sm text-gray-600 mt-2;
+    }
+
+    /* Buttons */
+    .action-buttons {
+        @apply flex justify-between items-center flex-wrap gap-4;
+    }
+
+    .btn {
+        @apply px-6 py-3 rounded-lg font-semibold transition-all duration-200
+        focus:outline-none focus:ring-2 focus:ring-offset-2
+        flex items-center justify-center;
+    }
+
+    .btn-primary {
+        @apply bg-blue-500 text-white hover:bg-blue-600
+        focus:ring-blue-400;
+    }
+
+    .btn-warning {
+        @apply bg-yellow-500 text-white hover:bg-yellow-600
+        focus:ring-yellow-400;
+    }
+
+    .btn-danger {
+        @apply bg-red-500 text-white hover:bg-red-600
+        focus:ring-red-400;
+    }
+
+    /* Success Animation */
+    @keyframes success {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .copy-success {
+        animation: success 0.3s ease-in-out;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .action-buttons {
+            @apply flex-col;
+        }
+
+        .btn {
+            @apply w-full;
+        }
+
+        .space-x-4 {
+            @apply space-x-0 space-y-2;
+        }
+
+        .progress-step span {
+            @apply text-xs -bottom-8;
+        }
+    }
+    .border {
+        @apply border-style: double;
+    }
+    /* Hover Effects */
+    .form-input:hover, .form-textarea:hover {
+        @apply border
+        border-gray-400;
+    }
+}
