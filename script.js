@@ -26,6 +26,8 @@ const elements = {
     charCount: document.getElementById('charCount'),
     backendSections: document.getElementById('backendSections'),
     frontendSections: document.getElementById('frontendSections'),
+    userCheckbox: document.getElementById('userCheckbox'),
+    securityCheckbox: document.getElementById('securityCheckbox'),
 
     toastContainer: (() => {
         const container = document.createElement('div');
@@ -105,6 +107,8 @@ const clearAll = (keepEndDate = false) => {
     elements.backendVoldoetNiet.value = "";
     elements.toelichting.value = "";
     elements.result.value = "";
+    elements.userCheckbox.checked = true;
+    elements.securityCheckbox.checked = true;
 
     if (!keepEndDate) {
         elements.eindDatum.value = "";
@@ -125,6 +129,8 @@ const generateFrontendTemplate = () => {
     const backendIssues = elements.backendVoldoetNiet.value.trim();
     const toelichting = elements.toelichting.value.trim();
     const eindDatum = elements.eindDatum.value.trim();
+    const userChecked = elements.userCheckbox.checked;
+    const securityChecked = elements.securityCheckbox.checked;
 
     let template = "";
 
@@ -177,10 +183,29 @@ const generateBackendTemplate = () => {
         template += `Hiermee voldoe je ${rollenLines.length >= CONFIG.MINIMUM_ROL && rollenLines.length <= CONFIG.MAXIMUM_ROL ? '' : 'niet '}aan de vraag minimaal ${CONFIG.MINIMUM_ROL} en maximaal ${CONFIG.MAXIMUM_ROL} gebruikersrollen voor je eindopdracht.\n\n`;
     }
 
+    let additionalEntities = [];
+    if (!elements.userCheckbox.checked) {
+        additionalEntities.push('user (inloggegevens)');
+    } else {
+        entiteitenLines.push('user (inloggegevens)');
+    }
+    if (!elements.securityCheckbox.checked) {
+        additionalEntities.push('security');
+    } else {
+        entiteitenLines.push('security');
+    }
     if (entiteitenLines.length) {
         template += `Ook kan ik de volgende entiteiten (Klassen) herkennen:\n\n- ${entiteitenLines.join('\n- ')}\n\n`;
-        template += `Hiermee kom je op ${entiteitenLines.length} entiteiten. Het is belangrijk dat je de volgende entiteit daar nog aan toevoegt:\n- user (inloggegevens)\n- security\n\n`;
-        template += `Hiermee kom je op ${entiteitenLines.length + 2} entiteiten en voldoe je ${entiteitenLines.length + 2 >= requirements.min && entiteitenLines.length + 2 <= requirements.max ? '' : 'niet '}aan de voorwaarde van minimaal ${requirements.min} en maximaal ${requirements.max} entiteiten.\n`;
+
+
+
+        if (additionalEntities.length > 0) {
+            template += `Het is belangrijk dat je de volgende entiteit${additionalEntities.length > 1 ? 'en' : ''} daar nog aan toevoegt:\n`;
+            template += `- ${additionalEntities.join('\n- ')}\n\n`;
+        }
+
+        const totalEntities = entiteitenLines.length + additionalEntities.length;
+        template += `Hiermee kom je op ${totalEntities} entiteiten en voldoe je ${totalEntities >= requirements.min && totalEntities <= requirements.max ? '' : 'niet '}aan de voorwaarde van minimaal ${requirements.min} en maximaal ${requirements.max} entiteiten.\n`;
     }
 
     if (toelichting) {
@@ -189,8 +214,8 @@ const generateBackendTemplate = () => {
 
     const voldoet = rollenLines.length >= CONFIG.MINIMUM_ROL &&
         rollenLines.length <= CONFIG.MAXIMUM_ROL &&
-        entiteitenLines.length + 2 >= requirements.min &&
-        entiteitenLines.length + 2 <= requirements.max;
+        entiteitenLines.length + (!elements.userCheckbox.checked ? 1 : 0) + (!elements.securityCheckbox.checked ? 1 : 0) >= requirements.min &&
+        entiteitenLines.length + (!elements.userCheckbox.checked ? 1 : 0) + (!elements.securityCheckbox.checked ? 1 : 0) <= requirements.max;
 
     template += voldoet ? "Je hebt een GO!\n" : `Je hebt een NO GO!\nJe kan je aangepaste idee inleveren tot ${eindDatum}. Let op: Je moet een GO hebben om aan je eindopdracht te beginnen.\n`;
 
@@ -224,6 +249,7 @@ elements.apiVoldoetNiet.addEventListener('input', updateTemplate);
 elements.backendVoldoetNiet.addEventListener('input', updateTemplate);
 elements.toelichting.addEventListener('input', updateTemplate);
 elements.eindDatum.addEventListener('input', updateTemplate);
+
 
 document.getElementById('copyButton').addEventListener('click', copyToClipboard);
 document.getElementById('clearAll').addEventListener('click', () => clearAll(false));
