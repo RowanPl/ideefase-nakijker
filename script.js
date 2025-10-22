@@ -31,9 +31,6 @@ const elements = {
     userImplicitCheckbox: document.getElementById('userImplicitCheckbox'),
     securityImplicitCheckbox: document.getElementById('securityImplicitCheckbox'),
     resultChangeable: document.getElementsByName('result_change'),
-    securityExplicit: document.getElementById('securityCheckbox'),
-    userExplicit: document.getElementById('userCheckbox'),
-
     toastContainer: (() => {
         const container = document.createElement('div');
         container.className = 'fixed top-4 right-4 z-50 pointer-events-none';
@@ -104,6 +101,18 @@ const toggleSections = (variant) => {
     elements.frontendSections.classList.toggle("hidden", variant !== "Frontend");
 };
 
+// === DEBOUNCE HELPER ===
+const debounce = (fn, delay) => {
+    let timeoutId;
+    return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn(...args), delay);
+    };
+};
+
+// Debounced version of updateTemplate
+const debouncedUpdateTemplate = debounce(updateTemplate, 600);
+
 // === FRONTEND TEMPLATE ===
 const generateFrontendTemplate = () => {
     const funcValue = elements.functionaliteiten.value.trim();
@@ -147,28 +156,19 @@ const generateBackendTemplate = () => {
     const variant = getSelectedVariant();
     const requirements = CONFIG.VARIANT_REQUIREMENTS[variant];
 
-    // impliciete aanwezigheid
-    // user
-    const userExplicit = elements.userCheckbox.checked;      // Expliciet aanwezig
-    const userImplicit = elements.userImplicitCheckbox?.checked || false;  // Impliciet aanwezig
-
-// security
+    const userExplicit = elements.userCheckbox.checked;
+    const userImplicit = elements.userImplicitCheckbox?.checked || false;
     const securityExplicit = elements.securityCheckbox.checked;
     const securityImplicit = elements.securityImplicitCheckbox?.checked || false;
 
-    console.log(securityExplicit,securityImplicit )
-// Bepaal wat als extra feedback moet verschijnen
     let additionalEntities = [];
     if (!(userExplicit || userImplicit)) additionalEntities.push('user (inloggegevens)');
     if (!(securityExplicit || securityImplicit)) additionalEntities.push('security');
 
-
-// Tellen voor totaal aantal entiteiten (voor GO/NO GO)
     const totalEntities =
         entiteitenLines.length +
         (userExplicit ? 1 : 0) +
         (securityExplicit ? 1 : 0);
-
 
     let template = "";
 
@@ -201,40 +201,29 @@ const generateBackendTemplate = () => {
 };
 
 // === TEMPLATE UPDATE ===
-const updateTemplate = () => {
+function updateTemplate() {
     const naam = elements.naam.value.trim();
     const variant = getSelectedVariant();
     const header = `Beste ${naam},\n\n`;
-
-    // body genereren op basis van variant
-    const body = variant === "Frontend"
-        ? generateFrontendTemplate()
-        : generateBackendTemplate();
-
-    // volledige template inclusief naam
+    const body = variant === "Frontend" ? generateFrontendTemplate() : generateBackendTemplate();
     elements.result.value = header + body;
 
-    // automatische GO/NO GO selecteren in de radiobuttons
     const autoResult = body.includes("Je hebt een GO!") ? "GO" : "NOGO";
     elements.resultChangeable.forEach(radio => {
         radio.checked = radio.value === autoResult;
     });
 
     updateCharCount();
-};
+}
 
-
-// === HANDMATIGE GO/NO GO ===
+// === MANUAL GO/NOGO ===
 const updateManualResult = (manualChoice = null) => {
     const choice = manualChoice || getManualResultChoice();
     if (!choice) return;
     const eindDatum = elements.eindDatum.value.trim();
-    let newText = "";
-    if (choice === "GO") {
-        newText = "\nJe hebt een GO!\n";
-    } else {
-        newText = `\nJe hebt een NO GO!\nJe kan je aangepaste idee inleveren tot ${eindDatum}. Let op: Je moet een GO hebben om aan je eindopdracht te beginnen.\n`;
-    }
+    let newText = choice === "GO"
+        ? "\nJe hebt een GO!\n"
+        : `\nJe hebt een NO GO!\nJe kan je aangepaste idee inleveren tot ${eindDatum}. Let op: Je moet een GO hebben om aan je eindopdracht te beginnen.\n`;
     elements.result.value = elements.result.value.replace(/Je hebt een (NO GO|GO)![\s\S]*$/g, "") + newText;
     updateCharCount();
 };
@@ -244,15 +233,15 @@ document.querySelectorAll('input[name="variant"]').forEach(i => i.addEventListen
     toggleSections(getSelectedVariant());
     updateTemplate();
 }));
+
 [
     elements.naam, elements.rollen, elements.entiteiten, elements.functionaliteiten,
     elements.apiVoldoetNiet, elements.backendVoldoetNiet, elements.toelichting, elements.eindDatum
-].forEach(el => el.addEventListener('input', updateTemplate));
+].forEach(el => el.addEventListener('input', debouncedUpdateTemplate));
 
-elements.userCheckbox.addEventListener('change', updateTemplate);
-elements.securityCheckbox.addEventListener('change', updateTemplate);
-elements.userImplicitCheckbox?.addEventListener('change', updateTemplate);
-elements.securityImplicitCheckbox?.addEventListener('change', updateTemplate);
+[elements.userCheckbox, elements.securityCheckbox, elements.userImplicitCheckbox, elements.securityImplicitCheckbox].forEach(el => {
+    el?.addEventListener('change', updateTemplate);
+});
 
 elements.resultChangeable.forEach(r => r.addEventListener('change', () => updateManualResult()));
 
