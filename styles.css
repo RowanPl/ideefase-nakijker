@@ -60,6 +60,11 @@
     @apply bg-gray-50 cursor-default;
 }
 
+.result-container_option{
+        display: flex;
+    flex-direction: column;
+}
+
 /* Responsive adjustments */
 @media (max-width: 640px) {
     .form-section {

@@ -1,4 +1,4 @@
-// Configuration
+// === CONFIG ===
 const CONFIG = {
     MINIMUM_FUNC: 4,
     MINIMUM_ROL: 2,
@@ -11,7 +11,7 @@ const CONFIG = {
     TOAST_DURATION: 5000,
 };
 
-// DOM Elements
+// === ELEMENTS ===
 const elements = {
     variant: document.getElementsByName('variant'),
     naam: document.getElementById('naam'),
@@ -28,6 +28,11 @@ const elements = {
     frontendSections: document.getElementById('frontendSections'),
     userCheckbox: document.getElementById('userCheckbox'),
     securityCheckbox: document.getElementById('securityCheckbox'),
+    userImplicitCheckbox: document.getElementById('userImplicitCheckbox'),
+    securityImplicitCheckbox: document.getElementById('securityImplicitCheckbox'),
+    resultChangeable: document.getElementsByName('result_change'),
+    securityExplicit: document.getElementById('securityCheckbox'),
+    userExplicit: document.getElementById('userCheckbox'),
 
     toastContainer: (() => {
         const container = document.createElement('div');
@@ -37,65 +42,43 @@ const elements = {
     })(),
 };
 
-// Helper Functions
-const getSelectedVariant = () => {
-    return Array.from(elements.variant).find(radio => radio.checked)?.value || "Frontend";
-};
+// === HELPERS ===
+const getSelectedVariant = () =>
+    Array.from(elements.variant).find(radio => radio.checked)?.value || "Frontend";
+
+const getManualResultChoice = () =>
+    Array.from(elements.resultChangeable).find(radio => radio.checked)?.value || null;
 
 const updateCharCount = () => {
-    const charCount = elements.result.value.length;
-    elements.charCount.textContent = charCount;
+    elements.charCount.textContent = elements.result.value.length;
 };
 
 const createToast = (message, type = 'success') => {
     const toast = document.createElement('div');
     toast.className = 'mb-3 pointer-events-auto';
-
-    // Set inner HTML with Tailwind classes
     toast.innerHTML = `
         <div class="max-w-sm bg-white rounded-lg shadow-lg border border-gray-100 p-4 flex items-center space-x-3 transform transition-all duration-300 translate-x-full">
             <div class="flex-shrink-0">
-                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <div class="w-8 h-8 ${type === 'error' ? 'bg-red-500' : 'bg-green-500'} rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                 </div>
             </div>
             <p class="text-gray-700 font-medium">${message}</p>
-        </div>
-    `;
-
-    // Add to container
+        </div>`;
     elements.toastContainer.appendChild(toast);
-
-    // Trigger entrance animation
-    requestAnimationFrame(() => {
-        const toastContent = toast.firstElementChild;
-        toastContent.classList.remove('translate-x-full');
-    });
-
-    // Remove after duration
+    requestAnimationFrame(() => toast.firstElementChild.classList.remove('translate-x-full'));
     setTimeout(() => {
-        const toastContent = toast.firstElementChild;
-        toastContent.classList.add('translate-x-full');
-        setTimeout(() => {
-            if (toast.parentNode) {
-                elements.toastContainer.removeChild(toast);
-            }
-        }, 300); // Wait for exit animation
+        toast.firstElementChild.classList.add('translate-x-full');
+        setTimeout(() => toast.remove(), 300);
     }, CONFIG.TOAST_DURATION);
 };
 
-// Update the copyToClipboard function
 const copyToClipboard = () => {
     navigator.clipboard.writeText(elements.result.value)
-        .then(() => {
-            createToast('Template copied to clipboard!');
-        })
-        .catch(err => {
-            console.error('Failed to copy:', err);
-            createToast('Failed to copy template', 'error');
-        });
+        .then(() => createToast('Template copied to clipboard!'))
+        .catch(() => createToast('Failed to copy template', 'error'));
 };
 
 const clearAll = (keepEndDate = false) => {
@@ -109,11 +92,10 @@ const clearAll = (keepEndDate = false) => {
     elements.result.value = "";
     elements.userCheckbox.checked = true;
     elements.securityCheckbox.checked = true;
-
-    if (!keepEndDate) {
-        elements.eindDatum.value = "";
-    }
-
+    elements.userImplicitCheckbox.checked = false;
+    elements.securityImplicitCheckbox.checked = false;
+    elements.resultChangeable.forEach(r => (r.checked = false));
+    if (!keepEndDate) elements.eindDatum.value = "";
     updateCharCount();
 };
 
@@ -122,26 +104,21 @@ const toggleSections = (variant) => {
     elements.frontendSections.classList.toggle("hidden", variant !== "Frontend");
 };
 
-// Template Generators
+// === FRONTEND TEMPLATE ===
 const generateFrontendTemplate = () => {
     const funcValue = elements.functionaliteiten.value.trim();
     const apiIssues = elements.apiVoldoetNiet.value.trim();
     const backendIssues = elements.backendVoldoetNiet.value.trim();
     const toelichting = elements.toelichting.value.trim();
     const eindDatum = elements.eindDatum.value.trim();
-    const userChecked = elements.userCheckbox.checked;
-    const securityChecked = elements.securityCheckbox.checked;
 
-    let template = "";
-
-    if (!funcValue) {
+    if (!funcValue)
         return "Je hebt geen juiste functionaliteiten opgegeven. Lees de ideefase en de eindopdracht nog eens goed door.\n";
-    }
 
     const funcLines = funcValue.split("\n").filter(line => line.trim());
     const voldoet = funcLines.length >= CONFIG.MINIMUM_FUNC;
 
-    template += `Je bent al goed op weg met je idee!\nUit jouw idee kan ik de volgende functionaliteiten halen:\n- ${funcValue.replace(/\n/g, '\n- ')}\n\n`;
+    let template = `Je bent al goed op weg met je idee!\nUit jouw idee kan ik de volgende functionaliteiten halen:\n- ${funcValue.replace(/\n/g, '\n- ')}\n\n`;
     template += `Hiermee voldoe je${voldoet ? '' : ' nog niet'} aan de eisen van de opdracht.\n`;
 
     if (!voldoet) {
@@ -149,25 +126,19 @@ const generateFrontendTemplate = () => {
         template += `Je moet nog ${remaining} ${remaining === 1 ? 'functionaliteit' : 'functionaliteiten'} toevoegen.\n`;
     }
 
-    if (toelichting) {
-        template += `\n${toelichting}\n\n`;
-    }
+    if (toelichting) template += `\n${toelichting}\n\n`;
+    if (apiIssues) template += `\nJe api voldoet niet aan de eisen:\n- ${apiIssues.replace(/\n/g, '\n- ')}\n`;
+    if (backendIssues) template += `\nJe backend voldoet niet aan de eisen:\n- ${backendIssues.replace(/\n/g, '\n- ')}\n`;
 
-    if (apiIssues) {
-        template += `\nJe api voldoet niet aan de eisen van de opdracht. Hieronder waar je op moet letten:\n- ${apiIssues.replace(/\n/g, '\n- ')}\n`;
-    }
-
-    if (backendIssues) {
-        template += `\nJe backend voldoet niet aan de eisen van de opdracht. Hieronder waar je op moet letten:\n- ${backendIssues.replace(/\n/g, '\n- ')}\n`;
-    }
-
-    if ((apiIssues || backendIssues) && eindDatum) {
-        template += `\nJe hebt een NO GO!\nJe kan je aangepaste idee inleveren tot ${eindDatum}. Let op: Je moet een GO hebben om aan je eindopdracht te beginnen.\n`;
-    }
+    const voldoetEisen = voldoet && !apiIssues && !backendIssues;
+    template += voldoetEisen
+        ? "\nJe hebt een GO!\n"
+        : `\nJe hebt een NO GO!\nJe kan je aangepaste idee inleveren tot ${eindDatum}. Let op: Je moet een GO hebben om aan je eindopdracht te beginnen.\n`;
 
     return template;
 };
 
+// === BACKEND TEMPLATE ===
 const generateBackendTemplate = () => {
     const rollenLines = elements.rollen.value.trim().split("\n").filter(line => line.trim());
     const entiteitenLines = elements.entiteiten.value.trim().split("\n").filter(line => line.trim());
@@ -176,103 +147,119 @@ const generateBackendTemplate = () => {
     const variant = getSelectedVariant();
     const requirements = CONFIG.VARIANT_REQUIREMENTS[variant];
 
+    // impliciete aanwezigheid
+    // user
+    const userExplicit = elements.userCheckbox.checked;      // Expliciet aanwezig
+    const userImplicit = elements.userImplicitCheckbox?.checked || false;  // Impliciet aanwezig
+
+// security
+    const securityExplicit = elements.securityCheckbox.checked;
+    const securityImplicit = elements.securityImplicitCheckbox?.checked || false;
+
+    console.log(securityExplicit,securityImplicit )
+// Bepaal wat als extra feedback moet verschijnen
+    let additionalEntities = [];
+    if (!(userExplicit || userImplicit)) additionalEntities.push('user (inloggegevens)');
+    if (!(securityExplicit || securityImplicit)) additionalEntities.push('security');
+
+
+// Tellen voor totaal aantal entiteiten (voor GO/NO GO)
+    const totalEntities =
+        entiteitenLines.length +
+        (userExplicit ? 1 : 0) +
+        (securityExplicit ? 1 : 0);
+
+
     let template = "";
 
     if (rollenLines.length) {
         template += `\nUit jouw idee kan ik de volgende gebruikersrollen halen:\n- ${rollenLines.join('\n- ')}\n\n`;
-        template += `Hiermee voldoe je ${rollenLines.length >= CONFIG.MINIMUM_ROL && rollenLines.length <= CONFIG.MAXIMUM_ROL ? '' : 'niet '}aan de vraag minimaal ${CONFIG.MINIMUM_ROL} en maximaal ${CONFIG.MAXIMUM_ROL} gebruikersrollen voor je eindopdracht.\n\n`;
+        template += `Hiermee voldoe je ${rollenLines.length >= CONFIG.MINIMUM_ROL && rollenLines.length <= CONFIG.MAXIMUM_ROL ? '' : 'niet '}aan de eis van minimaal ${CONFIG.MINIMUM_ROL} en maximaal ${CONFIG.MAXIMUM_ROL} rollen.\n\n`;
     }
 
-    let additionalEntities = [];
-    if (!elements.userCheckbox.checked) {
-        additionalEntities.push('user (inloggegevens)');
-    } else {
-        entiteitenLines.push('user (inloggegevens)');
-    }
-    if (!elements.securityCheckbox.checked) {
-        additionalEntities.push('security');
-    } else {
-        entiteitenLines.push('security');
-    }
     if (entiteitenLines.length) {
-        template += `Ook kan ik de volgende entiteiten (Klassen) herkennen:\n\n- ${entiteitenLines.join('\n- ')}\n\n`;
-
-
-
+        template += `De volgende entiteiten (Klassen) herken ik:\n- ${entiteitenLines.join('\n- ')}\n\n`;
         if (additionalEntities.length > 0) {
-            template += `Het is belangrijk dat je de volgende entiteit${additionalEntities.length > 1 ? 'en' : ''} daar nog aan toevoegt:\n`;
-            template += `- ${additionalEntities.join('\n- ')}\n\n`;
+            template += `Het is belangrijk dat je deze nog toevoegt:\n- ${additionalEntities.join('\n- ')}\n\n`;
         }
-
-        const totalEntities = entiteitenLines.length + additionalEntities.length;
-        template += `Hiermee kom je op ${totalEntities} entiteiten en voldoe je ${totalEntities >= requirements.min && totalEntities <= requirements.max ? '' : 'niet '}aan de voorwaarde van minimaal ${requirements.min} en maximaal ${requirements.max} entiteiten.\n`;
+        template += `Hiermee kom je op ${totalEntities} entiteiten en voldoe je ${totalEntities >= requirements.min && totalEntities <= requirements.max ? '' : 'niet '}aan de eisen (minimaal ${requirements.min}, maximaal ${requirements.max}).\n`;
     }
 
-    if (toelichting) {
-        template += `\n${toelichting}\n\n`;
-    }
+    if (toelichting) template += `\n${toelichting}\n\n`;
 
-    const voldoet = rollenLines.length >= CONFIG.MINIMUM_ROL &&
+    const voldoet =
+        rollenLines.length >= CONFIG.MINIMUM_ROL &&
         rollenLines.length <= CONFIG.MAXIMUM_ROL &&
-        entiteitenLines.length + (!elements.userCheckbox.checked ? 1 : 0) + (!elements.securityCheckbox.checked ? 1 : 0) >= requirements.min &&
-        entiteitenLines.length + (!elements.userCheckbox.checked ? 1 : 0) + (!elements.securityCheckbox.checked ? 1 : 0) <= requirements.max;
+        totalEntities >= requirements.min &&
+        totalEntities <= requirements.max;
 
-    template += voldoet ? "Je hebt een GO!\n" : `Je hebt een NO GO!\nJe kan je aangepaste idee inleveren tot ${eindDatum}. Let op: Je moet een GO hebben om aan je eindopdracht te beginnen.\n`;
+    template += voldoet
+        ? "Je hebt een GO!\n"
+        : `Je hebt een NO GO!\nJe kan je aangepaste idee inleveren tot ${eindDatum}. Let op: Je moet een GO hebben om aan je eindopdracht te beginnen.\n`;
 
     return template;
 };
 
-// Update Template
+// === TEMPLATE UPDATE ===
 const updateTemplate = () => {
     const naam = elements.naam.value.trim();
     const variant = getSelectedVariant();
-    const templateHeader = `Beste ${naam},\n\n`;
-    const templateBody = variant === "Frontend" ? generateFrontendTemplate() : generateBackendTemplate();
+    const header = `Beste ${naam},\n\n`;
 
-    elements.result.value = templateHeader + templateBody;
+    // body genereren op basis van variant
+    const body = variant === "Frontend"
+        ? generateFrontendTemplate()
+        : generateBackendTemplate();
+
+    // volledige template inclusief naam
+    elements.result.value = header + body;
+
+    // automatische GO/NO GO selecteren in de radiobuttons
+    const autoResult = body.includes("Je hebt een GO!") ? "GO" : "NOGO";
+    elements.resultChangeable.forEach(radio => {
+        radio.checked = radio.value === autoResult;
+    });
+
     updateCharCount();
 };
 
-// Event Listeners
-document.querySelectorAll('input[name="variant"]').forEach(input => {
-    input.addEventListener('change', () => {
-        toggleSections(getSelectedVariant());
-        updateTemplate();
-    });
-});
 
-elements.naam.addEventListener('input', updateTemplate);
-elements.rollen.addEventListener('input', updateTemplate);
-elements.entiteiten.addEventListener('input', updateTemplate);
-elements.functionaliteiten.addEventListener('input', updateTemplate);
-elements.apiVoldoetNiet.addEventListener('input', updateTemplate);
-elements.backendVoldoetNiet.addEventListener('input', updateTemplate);
-elements.toelichting.addEventListener('input', updateTemplate);
-elements.eindDatum.addEventListener('input', updateTemplate);
+// === HANDMATIGE GO/NO GO ===
+const updateManualResult = (manualChoice = null) => {
+    const choice = manualChoice || getManualResultChoice();
+    if (!choice) return;
+    const eindDatum = elements.eindDatum.value.trim();
+    let newText = "";
+    if (choice === "GO") {
+        newText = "\nJe hebt een GO!\n";
+    } else {
+        newText = `\nJe hebt een NO GO!\nJe kan je aangepaste idee inleveren tot ${eindDatum}. Let op: Je moet een GO hebben om aan je eindopdracht te beginnen.\n`;
+    }
+    elements.result.value = elements.result.value.replace(/Je hebt een (NO GO|GO)![\s\S]*$/g, "") + newText;
+    updateCharCount();
+};
 
+// === EVENTS ===
+document.querySelectorAll('input[name="variant"]').forEach(i => i.addEventListener('change', () => {
+    toggleSections(getSelectedVariant());
+    updateTemplate();
+}));
+[
+    elements.naam, elements.rollen, elements.entiteiten, elements.functionaliteiten,
+    elements.apiVoldoetNiet, elements.backendVoldoetNiet, elements.toelichting, elements.eindDatum
+].forEach(el => el.addEventListener('input', updateTemplate));
+
+elements.userCheckbox.addEventListener('change', updateTemplate);
+elements.securityCheckbox.addEventListener('change', updateTemplate);
+elements.userImplicitCheckbox?.addEventListener('change', updateTemplate);
+elements.securityImplicitCheckbox?.addEventListener('change', updateTemplate);
+
+elements.resultChangeable.forEach(r => r.addEventListener('change', () => updateManualResult()));
 
 document.getElementById('copyButton').addEventListener('click', copyToClipboard);
 document.getElementById('clearAll').addEventListener('click', () => clearAll(false));
 document.getElementById('clearKeepEnddate').addEventListener('click', () => clearAll(true));
 
-const style = document.createElement('style');
-style.textContent = `
-    .toast-enter {
-        transform: translateX(100%);
-    }
-    .toast-enter-active {
-        transform: translateX(0);
-        transition: transform 300ms ease-out;
-    }
-    .toast-exit {
-        transform: translateX(0);
-    }
-    .toast-exit-active {
-        transform: translateX(100%);
-        transition: transform 300ms ease-out;
-    }
-`;
-document.head.appendChild(style);
-// Initialize
+// === INIT ===
 toggleSections(getSelectedVariant());
 updateTemplate();

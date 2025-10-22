@@ -95,18 +95,29 @@
                                           placeholder="Voer entiteiten in (één per regel)"></textarea>
                             <div class="textarea-counter"></div>
                         </div>
-                        <div class="input-group p-4 bg-white relative border-2 border-blue-500">
-                            <label class="form-label">
+                        <div class="input-group p-4 bg-white relative border-2 border-blue-500 flex items-center space-x-4">
+                            <label class="form-label flex items-center space-x-2">
                                 <input type="checkbox" id="userCheckbox">
-                                User (inloggegevens)
+                                <span>User (inloggegevens)</span>
+                            </label>
+                            <label class="form-label flex items-center space-x-2">
+                                <input type="checkbox" id="userImplicitCheckbox">
+                                <span>Impliceert aanwezig</span>
                             </label>
                         </div>
-                        <div class="input-group p-4 bg-white relative border-2 border-blue-500">
-                            <label class="form-label">
+
+                        <div class="input-group p-4 bg-white relative border-2 border-blue-500 flex items-center space-x-4">
+                            <label class="form-label flex items-center space-x-2">
                                 <input type="checkbox" id="securityCheckbox">
-                                Security
+                                <span>Security</span>
+                            </label>
+                            <label class="form-label flex items-center space-x-2">
+                                <input type="checkbox" id="securityImplicitCheckbox">
+                                <span>Impliceert aanwezig</span>
                             </label>
                         </div>
+
+
                     </div>
 
                 </div>
@@ -170,6 +181,15 @@
                             Einddatum:
                         </label>
                         <input type="date" id="eindDatum" class="form-input" placeholder="Selecteer een datum">
+                        <div class="result-container_option">
+
+                            <label for="result_change">
+                                <input type="radio" name="result_change" value="NOGO"> NO GO
+                            </label>
+                            <label for="result_change">
+                                <input type="radio" name="result_change" value="GO"> GO
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
